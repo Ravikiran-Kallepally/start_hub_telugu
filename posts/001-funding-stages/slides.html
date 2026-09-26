@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B1020; --card: #141B31; --ink: #F4F1EA; --muted: #8A93A6;
+    --accent: #C6FF3D; --line: #26304D;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1350px; overflow: hidden; background: var(--bg); }
+  body { font-family: Inter, "Segoe UI", sans-serif; color: var(--ink); }
+  .slide { width: 1080px; height: 1350px; padding: 80px 88px; display: flex; flex-direction: column; position: relative; }
+  .top { display: flex; justify-content: space-between; align-items: center; font: 600 26px Inter, sans-serif; letter-spacing: 4px; color: var(--muted); }
+  .top b { color: var(--ink); }
+  .top .dot { display: inline-block; width: 14px; height: 14px; background: var(--accent); border-radius: 50%; margin-right: 14px; vertical-align: 1px; }
+  .main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .kicker { font: 600 30px Inter, sans-serif; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 28px; }
+  h1 { font: 700 104px/1.02 "Space Grotesk", sans-serif; letter-spacing: -3px; }
+  h2 { font: 700 84px/1.05 "Space Grotesk", sans-serif; letter-spacing: -2px; margin-bottom: 40px; }
+  h1 em, h2 em { font-style: normal; color: var(--accent); }
+  p { font-size: 38px; line-height: 1.45; color: #D5D8E0; max-width: 880px; }
+  p + p { margin-top: 24px; }
+  .who { margin-top: 48px; display: flex; flex-wrap: wrap; gap: 16px; }
+  .who span { font: 500 28px Inter, sans-serif; padding: 14px 26px; border: 2px solid var(--line); border-radius: 100px; color: var(--ink); }
+  .goal { margin-top: 44px; background: var(--card); border-left: 8px solid var(--accent); padding: 30px 36px; border-radius: 8px; font-size: 34px; line-height: 1.4; }
+  .goal b { color: var(--accent); font-weight: 600; }
+  /* stage track */
+  .track { display: flex; align-items: center; margin-bottom: 56px; }
+  .track i { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--line); background: var(--bg); flex: none; }
+  .track i.done { background: var(--line); }
+  .track i.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 10px rgba(198,255,61,.15); }
+  .track s { flex: 1; height: 3px; background: var(--line); }
+  .bottom { display: flex; justify-content: space-between; align-items: center; font: 500 28px Inter, sans-serif; color: var(--muted); }
+  .bottom .swipe { color: var(--ink); font-weight: 600; }
+  .bottom .swipe span { color: var(--accent); }
+  /* dilution bars */
+  .bars { margin-top: 10px; }
+  .bar { display: grid; grid-template-columns: 250px 1fr 120px; align-items: center; gap: 24px; margin-bottom: 26px; font-size: 30px; }
+  .bar .fill { height: 54px; background: var(--line); border-radius: 6px; position: relative; overflow: hidden; }
+  .bar .fill > div { height: 100%; background: var(--accent); border-radius: 6px; }
+  .bar .pct { font: 700 40px "Space Grotesk", sans-serif; text-align: right; }
+  .note { font-size: 26px; color: var(--muted); margin-top: 18px; }
+  .big-cta { font: 700 60px/1.15 "Space Grotesk", sans-serif; margin-top: 50px; }
+  .list { list-style: none; margin-top: 10px; }
+  .list li { font-size: 38px; padding: 22px 0; border-bottom: 2px solid var(--line); display: flex; gap: 24px; }
+  .list li b { color: var(--accent); font-family: "Space Grotesk", sans-serif; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const HANDLE = "@startup_hub_telugu";
+const STAGES = 6; // bootstrap, pre-seed, seed, A, B/C+, exit
+
+const slides = [
+  { cover: true, html: `
+      <div class="kicker">Startup funding 101</div>
+      <h1>Where does startup money <em>actually</em> come from?</h1>
+      <p style="margin-top:48px">The 6 stages every funded startup goes through, explained in 60 seconds.</p>` },
+  { stage: 0, html: `
+      <div class="kicker">Stage 1 · Bootstrapping</div>
+      <h2>Your own <em>money</em></h2>
+      <p>Most startups begin with the founders' savings, sometimes topped up by friends & family.</p>
+      <div class="who"><span>Founders</span><span>Friends & family</span></div>
+      <div class="goal"><b>Goal:</b> turn an idea into something people can try.</div>` },
+  { stage: 1, html: `
+      <div class="kicker">Stage 2 · Pre-seed</div>
+      <h2>The first <em>outside</em> cheque</h2>
+      <p>Investors are betting almost entirely on the founders. There's little data yet.</p>
+      <div class="who"><span>Angel investors</span><span>Accelerators</span><span>Pre-seed funds</span></div>
+      <div class="goal"><b>Goal:</b> build the first version (MVP) and get early users.</div>` },
+  { stage: 2, html: `
+      <div class="kicker">Stage 3 · Seed</div>
+      <h2>Prove people <em>want it</em></h2>
+      <p>Now there's a product. The question: do customers love it enough to keep coming back and pay?</p>
+      <div class="who"><span>Seed funds</span><span>Angels</span></div>
+      <div class="goal"><b>Goal:</b> find product-market fit.</div>` },
+  { stage: 3, html: `
+      <div class="kicker">Stage 4 · Series A</div>
+      <h2>Build the <em>machine</em></h2>
+      <p>Something is working. Series A money turns it into a repeatable business: sales, marketing, a real team.</p>
+      <div class="who"><span>Venture capital firms</span></div>
+      <div class="goal"><b>Goal:</b> show growth can be scaled predictably.</div>` },
+  { stage: 4, html: `
+      <div class="kicker">Stage 5 · Series B, C, D…</div>
+      <h2>Go <em>big</em></h2>
+      <p>Each round is usually larger than the last. Money goes into new cities, new products, and sometimes buying other companies.</p>
+      <div class="who"><span>Large VCs</span><span>Growth funds</span><span>Private equity</span></div>
+      <div class="goal"><b>Goal:</b> dominate the market.</div>` },
+  { stage: 5, html: `
+      <div class="kicker">Stage 6 · The exit</div>
+      <h2>How investors get <em>paid back</em></h2>
+      <p>Investors only make money when their shares can be sold. That usually happens in one of two ways:</p>
+      <ul class="list">
+        <li><b>IPO</b> Company lists on the stock market</li>
+        <li><b>M&A</b> A bigger company buys it</li>
+      </ul>` },
+  { html: `
+      <div class="kicker">The catch · Dilution</div>
+      <h2>Every round, the founder's slice <em>shrinks</em></h2>
+      <div class="bars">
+        <div class="bar"><span>Day one</span><div class="fill"><div style="width:100%"></div></div><span class="pct">100%</span></div>
+        <div class="bar"><span>After Seed</span><div class="fill"><div style="width:80%"></div></div><span class="pct">80%</span></div>
+        <div class="bar"><span>After Series A</span><div class="fill"><div style="width:64%"></div></div><span class="pct">64%</span></div>
+        <div class="bar"><span>After Series B</span><div class="fill"><div style="width:54%"></div></div><span class="pct">54%</span></div>
+      </div>
+      <p style="margin-top:30px">…but if the pie grows fast enough, a smaller slice is worth <em style="color:var(--accent);font-style:normal">far more</em>.</p>
+      <div class="note">Illustrative: selling 20% at Seed, 20% at A, 15% at B. Ignores employee stock pools.</div>` },
+  { last: true, html: `
+      <div class="kicker">Startup Hub Telugu</div>
+      <h2>How startups <em>really</em> work.</h2>
+      <p>Funding, business models, and how companies actually make money. Reels in Telugu, breakdowns like this every week.</p>
+      <div class="big-cta">Follow<br><span style="color:var(--accent)">${HANDLE}</span><br>so you don't miss the next one.</div>
+      <p style="margin-top:40px;color:var(--muted);font-size:32px">💾 Save this for later · 📤 Send it to a future founder</p>` },
+];
+
+const n = Number(new URLSearchParams(location.search).get("s") || 1);
+const s = slides[n - 1];
+const pad = x => String(x).padStart(2, "0");
+let track = "";
+if (s.stage !== undefined) {
+  for (let i = 0; i < STAGES; i++) {
+    const cls = i < s.stage ? "done" : i === s.stage ? "on" : "";
+    track += `<i class="${cls}"></i>` + (i < STAGES - 1 ? "<s></s>" : "");
+  }
+  track = `<div class="track">${track}</div>`;
+}
+document.getElementById("root").innerHTML = `
+  <div class="slide">
+    <div class="top"><span><span class="dot"></span><b>STARTUP HUB</b> TELUGU</span><span>${pad(n)}/${pad(slides.length)}</span></div>
+    <div class="main">${track}${s.html}</div>
+    <div class="bottom"><span>${HANDLE}</span>${s.last ? "<span></span>" : '<span class="swipe">Swipe <span>→</span></span>'}</div>
+  </div>`;
+</script>
+</body>
+</html>
