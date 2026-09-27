@@ -15,6 +15,8 @@ posts/
     slides.html        Slide source (edit the text here)
     slide-01.png ...   Rendered slides, ready to upload
     caption.txt        Caption and hashtags
+reels/
+  001-funding-stages/  Telugu reel script, caption, filming checklist
 render.sh              Turns slides.html into PNGs
 ```
 
