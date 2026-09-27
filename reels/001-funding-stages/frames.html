@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=Noto+Sans+Telugu:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B1020; --card: #141B31; --ink: #F4F1EA; --muted: #8A93A6;
+    --accent: #C6FF3D; --line: #26304D;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; background: var(--bg); }
+  body { font-family: Inter, "Noto Sans Telugu", "Segoe UI", sans-serif; color: var(--ink); }
+  /* Content stays between y=240 and y=1340 so Instagram's UI and a
+     green-screen face in the bottom third never cover it. */
+  .frame { position: absolute; left: 88px; right: 150px; top: 240px; height: 1100px; display: flex; flex-direction: column; }
+  .brand { font: 600 28px Inter, sans-serif; letter-spacing: 4px; color: var(--muted); }
+  .brand b { color: var(--ink); }
+  .brand .dot { display: inline-block; width: 14px; height: 14px; background: var(--accent); border-radius: 50%; margin-right: 14px; vertical-align: 1px; }
+  .main { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .kicker { font: 600 34px Inter, sans-serif; color: var(--accent); letter-spacing: 3px; text-transform: uppercase; margin-bottom: 28px; }
+  h1 { font: 700 118px/1.1 "Space Grotesk", "Noto Sans Telugu", sans-serif; letter-spacing: -2px; }
+  h2 { font: 700 104px/1.05 "Space Grotesk", sans-serif; letter-spacing: -2px; margin-bottom: 36px; }
+  h1 em, h2 em { font-style: normal; color: var(--accent); }
+  p { font-size: 46px; line-height: 1.4; color: #D5D8E0; }
+  .who { margin-top: 44px; display: flex; flex-wrap: wrap; gap: 18px; }
+  .who span { font: 500 34px Inter, sans-serif; padding: 16px 30px; border: 2px solid var(--line); border-radius: 100px; }
+  .track { display: flex; align-items: center; margin-bottom: 64px; }
+  .track i { width: 30px; height: 30px; border-radius: 50%; border: 3px solid var(--line); background: var(--bg); flex: none; }
+  .track i.done { background: var(--line); }
+  .track i.on { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 12px rgba(198,255,61,.15); }
+  .track s { flex: 1; height: 3px; background: var(--line); }
+  .bar { display: grid; grid-template-columns: 1fr 150px; align-items: center; gap: 24px; margin-bottom: 14px; }
+  .bar .fill { height: 64px; background: var(--line); border-radius: 8px; overflow: hidden; }
+  .bar .fill > div { height: 100%; background: var(--accent); }
+  .bar .pct { font: 700 50px "Space Grotesk", sans-serif; text-align: right; }
+  .bar-label { font-size: 32px; color: var(--muted); margin-bottom: 10px; }
+  .handle { font: 700 64px "Space Grotesk", sans-serif; color: var(--accent); margin-top: 20px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const HANDLE = "@startup_hub_telugu";
+const STAGES = 6;
+const stage = (i, name, line, who) => ({ stage: i, html: `
+  <div class="kicker">Stage ${i + 1}</div>
+  <h2>${name}</h2>
+  <p>${line}</p>
+  <div class="who">${who.map(w => `<span>${w}</span>`).join("")}</div>` });
+
+const frames = [
+  { html: `
+    <div class="kicker">Startup funding 101</div>
+    <h1>Startup కి <em>crores</em> ఎక్కడి నుంచి? 💰</h1>
+    <p style="margin-top:40px">6 stages, 45 seconds</p>` },
+  stage(0, "Bootstrapping", "Founders' own savings", ["Founders", "Friends & family"]),
+  stage(1, "Pre-seed", "The first outside money. Investors bet on the founders.", ["Angel investors", "Accelerators"]),
+  stage(2, "Seed", "Do customers really use it? Do they pay?", ["Seed funds", "Angels"]),
+  stage(3, "Series A", "Something works. Now turn it into a real business.", ["VC firms"]),
+  stage(4, "Series B, C, D", "New cities. New products. Bigger rounds.", ["Large VCs", "Growth funds"]),
+  stage(5, "Exit", "When investors finally get paid back", ["IPO", "Acquisition"]),
+  { html: `
+    <div class="kicker">The catch</div>
+    <h2>Founder share <em>shrinks</em></h2>
+    ${[["Day one", 100], ["After Seed", 80], ["After Series A", 64], ["After Series B", 54]].map(([l, v]) => `
+      <div class="bar-label">${l}</div>
+      <div class="bar"><div class="fill"><div style="width:${v}%"></div></div><span class="pct">${v}%</span></div>`).join("")}
+    <p style="margin-top:30px">But a smaller slice of a <em style="color:var(--accent);font-style:normal">bigger company</em> is worth more.</p>` },
+  { html: `
+    <h1 style="font-size:100px">Which stage next?</h1>
+    <p style="margin-top:36px">Comment చేయండి 👇</p>
+    <p style="margin-top:80px">Follow</p>
+    <div class="handle">${HANDLE}</div>` },
+];
+
+const n = Number(new URLSearchParams(location.search).get("s") || 1);
+const f = frames[n - 1];
+let track = "";
+if (f.stage !== undefined) {
+  for (let i = 0; i < STAGES; i++) {
+    const cls = i < f.stage ? "done" : i === f.stage ? "on" : "";
+    track += `<i class="${cls}"></i>` + (i < STAGES - 1 ? "<s></s>" : "");
+  }
+  track = `<div class="track">${track}</div>`;
+}
+document.getElementById("root").innerHTML = `
+  <div class="frame">
+    <div class="brand"><span class="dot"></span><b>STARTUP HUB</b> TELUGU</div>
+    <div class="main">${track}${f.html}</div>
+  </div>`;
+</script>
+</body>
+</html>

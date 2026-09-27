@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Render a post's slides.html into slide-XX.png files (1080x1350) using headless Edge.
 # Usage: ./render.sh posts/001-funding-stages [slide_count]
+#        ./render.sh reels/001-funding-stages  (9:16 frames from frames.html)
 #        ./render.sh brand            (renders the profile picture)
 set -e
 EDGE="/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
@@ -19,9 +20,13 @@ if [ "$DIR" = "brand" ]; then
   exit
 fi
 
-COUNT="${2:-$(grep -oE '^  \{ ' "$DIR/slides.html" | wc -l)}"
+# Posts have slides.html (4:5), reels have frames.html (9:16).
+if [ -f "$DIR/frames.html" ]; then SRC=frames; OUT=frame; SIZE=1080,1920
+else SRC=slides; OUT=slide; SIZE=1080,1350; fi
+
+COUNT="${2:-$(grep -cE '^  (\{ |stage\()' "$DIR/$SRC.html")}"
 for i in $(seq 1 "$COUNT"); do
   n=$(printf "%02d" "$i")
-  shot 1080,1350 "$ROOT/$DIR/slide-$n.png" "file:///$ROOT/$DIR/slides.html?s=$i"
-  echo "rendered $DIR/slide-$n.png"
+  shot "$SIZE" "$ROOT/$DIR/$OUT-$n.png" "file:///$ROOT/$DIR/$SRC.html?s=$i"
+  echo "rendered $DIR/$OUT-$n.png"
 done
