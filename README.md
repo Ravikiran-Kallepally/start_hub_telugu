@@ -55,4 +55,5 @@ build_reel.py          Frames + voice recording into reel.mp4
 
 | # | Post | Date |
 |---|---|---|
-| 001 | Startup funding stages | 2026-09-26 |
+| 001 | Startup funding stages (carousel) | 2026-09-26 |
+| R001 | Startup funding stages (Telugu reel) | 2026-09-27 |
