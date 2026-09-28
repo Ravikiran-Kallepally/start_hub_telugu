@@ -3,8 +3,9 @@
 Usage: python build_reel.py reels/001-funding-stages
 
 Put your recording in the reel folder as voice.m4a / .mp3 / .wav / .webm / .ogg.
-Read the script with a clear pause (about 1 second) between lines: the frame
-changes at each pause. Without a voice file, a silent preview is made instead
+Pause briefly between lines. The frame changes at the pause nearest to where
+each line should end (estimated from the line lengths in script.md). To set the
+times by hand, put one cut time in seconds per line break in cuts.txt. Without a voice file, a silent preview is made instead
 (5 seconds per frame).
 Output: <reel folder>/reel.mp4
 """
@@ -31,24 +32,70 @@ def audio_length(voice):
 
 def pauses(voice):
     """Return (start, end) of each quiet stretch in the recording."""
-    out = run(["-i", str(voice), "-af", "silencedetect=noise=-35dB:d=0.5", "-f", "null", "-"]).stderr
-    starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", out)]
-    ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", out)]
+    out = run(["-i", str(voice), "-af", "silencedetect=noise=-30dB:d=0.35", "-f", "null", "-"]).stderr
+    starts = [max(0.0, float(x)) for x in re.findall(r"silence_start: (-?[\d.]+)", out)]
+    ends = [float(x) for x in re.findall(r"silence_end: (-?[\d.]+)", out)]
     return list(zip(starts, ends))
 
 
-def frame_durations(voice, count):
+def line_weights(folder, count):
+    """Relative length of each spoken line, from the Romanized section of script.md."""
+    script = folder / "script.md"
+    if script.exists():
+        text = script.read_text(encoding="utf-8")
+        section = text.split("## Romanized", 1)[-1].split("\n## ", 1)[0]
+        lines = re.findall(r"^\d+\. (.+)$", section, re.M)
+        if len(lines) == count:
+            return [len(line) for line in lines]
+    return [1] * count
+
+
+def frame_durations(voice, folder, count):
     total = audio_length(voice)
-    quiet = pauses(voice)
-    # Ignore silence at the very start and end; those aren't between lines.
-    inner = [(s, e) for s, e in quiet if s > 0.3 and e < total - 0.3]
-    if len(inner) < count - 1:
-        print(f"Found only {len(inner)} pauses for {count} frames; splitting evenly instead.")
-        return [total / count] * count
-    # The longest pauses are the ones between lines.
-    cuts = sorted(sorted(inner, key=lambda p: p[1] - p[0], reverse=True)[: count - 1])
-    marks = [0.0] + [(s + e) / 2 for s, e in cuts] + [total]
+    manual = folder / "cuts.txt"
+    if manual.exists():
+        # One cut time in seconds per line, overriding the automatic detection.
+        cuts = [float(x) for x in manual.read_text().split()]
+        print(f"Using {len(cuts)} cut times from cuts.txt")
+    else:
+        cuts = auto_cuts(voice, total, line_weights(folder, count), count)
+    marks = [0.0] + cuts + [total]
     return [b - a for a, b in zip(marks, marks[1:])]
+
+
+def auto_cuts(voice, total, weights, count):
+    quiet = pauses(voice)
+    speech_start = quiet[0][1] if quiet and quiet[0][0] < 0.3 else 0.0
+    speech_end = quiet[-1][0] if quiet and quiet[-1][1] > total - 0.3 else total
+    # Pauses between the first and last word are candidate cut points.
+    cands = [(s + e) / 2 for s, e in quiet if s > speech_start and e < speech_end]
+    need = count - 1
+    span = speech_end - speech_start
+    acc, expected = 0, []
+    for w in weights[:-1]:
+        acc += w
+        expected.append(speech_start + span * acc / sum(weights))
+    if len(cands) < need:
+        print(f"Found only {len(cands)} pauses for {count} frames; using estimated times.")
+        return expected
+    # Pick the increasing set of pauses closest to where each line should end.
+    INF = float("inf")
+    best = [[INF] * len(cands) for _ in range(need)]
+    prev = [[-1] * len(cands) for _ in range(need)]
+    for j, c in enumerate(cands):
+        best[0][j] = (c - expected[0]) ** 2
+    for k in range(1, need):
+        for j, c in enumerate(cands):
+            for i in range(j):
+                cost = best[k - 1][i] + (c - expected[k]) ** 2
+                if cost < best[k][j]:
+                    best[k][j], prev[k][j] = cost, i
+    j = min(range(len(cands)), key=lambda x: best[need - 1][x])
+    picked = []
+    for k in range(need - 1, -1, -1):
+        picked.append(cands[j])
+        j = prev[k][j]
+    return picked[::-1]
 
 
 def main():
@@ -59,7 +106,7 @@ def main():
     voice = next((p for ext in ("m4a", "mp3", "wav", "webm", "ogg", "aac")
                   for p in folder.glob(f"voice.{ext}")), None)
 
-    durations = frame_durations(voice, len(frames)) if voice else [PREVIEW_SECONDS] * len(frames)
+    durations = frame_durations(voice, folder, len(frames)) if voice else [PREVIEW_SECONDS] * len(frames)
     for f, d in zip(frames, durations):
         print(f"{f.name}: {d:.1f}s")
 
