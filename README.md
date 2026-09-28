@@ -17,7 +17,8 @@ posts/
     caption.txt        Caption and hashtags
 reels/
   001-funding-stages/  Telugu reel script, frames.html + frame-XX.png (9:16 backgrounds)
-render.sh              Turns slides.html into PNGs
+render.sh              Turns slides.html / frames.html into PNGs
+build_reel.py          Frames + voice recording into reel.mp4
 ```
 
 ## Making a new post
@@ -26,6 +27,13 @@ render.sh              Turns slides.html into PNGs
 2. Edit the `slides` list in `slides.html`.
 3. Render: `./render.sh posts/002-how-zomato-makes-money`
 4. Write `caption.txt`.
+
+## Making a reel
+
+1. Render the frames: `./render.sh reels/001-funding-stages`
+2. Record the script with a 1 second pause between lines. Save it in the reel folder as `voice.m4a`.
+3. Build the video: `python build_reel.py reels/001-funding-stages` (needs `pip install imageio-ffmpeg`)
+4. Upload `reel.mp4` on instagram.com.
 
 ## Brand
 
